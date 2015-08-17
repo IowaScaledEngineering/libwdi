@@ -39,6 +39,8 @@
 #define FLUSHER while(getchar() != 0x0A)
 #define INF_NAME "libusb_device.inf"
 
+struct wdi_options_prepare_driver pd_options = { 0 };
+
 void usage(void)
 {
 	printf("\n");
@@ -129,10 +131,10 @@ int __cdecl main(int argc, char *argv[])
 		break;
 	case WDI_ERROR_NO_DEVICE:
 		printf("No driverless USB devices were found.\n");
-		return 0;
+		return 1;
 	default:
 		printf("wdi_create_list: error %s\n", wdi_strerror(r));
-		return 0;
+		return 1;
 	}
 
 	for (device = list; device != NULL; device = device->next) {
@@ -156,9 +158,14 @@ int __cdecl main(int argc, char *argv[])
 				continue;
 			}
 		}
+		
+		pd_options.driver_type = WDI_LIBUSB0;
+		pd_options.disable_cat = FALSE;
+		pd_options.disable_signing = FALSE;
+		
 		// Does the user want to use a supplied .inf
 		if (use_supplied_inf_flag == 0) {
-			if (wdi_prepare_driver(device, path,INF_NAME, NULL) == WDI_SUCCESS) {
+			if (wdi_prepare_driver(device, path,INF_NAME, &pd_options) == WDI_SUCCESS) {
 				printf("installing wdi driver with <%s> at <%s>\n",INF_NAME, path);
 				wdi_install_driver(device, path, INF_NAME, NULL);
 			}
